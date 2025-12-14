@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Neon Bread Christmas Beats</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background: #0a0a0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        #gameContainer {
+            width: 375px;
+            height: 667px;
+            background: #1a1a2e;
+            border: 4px solid #00ff41;
+            box-shadow: 
+                0 0 20px #00ff41,
+                0 0 40px #00ff41,
+                inset 0 0 20px rgba(0, 255, 65, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* HUD Area */
+        #hud {
+            height: 100px;
+            background: linear-gradient(180deg, #0f0f1e 0%, #1a1a2e 100%);
+            border-bottom: 3px solid #ff00ff;
+            box-shadow: 0 0 15px #ff00ff;
+            padding: 15px;
+            text-align: center;
+        }
+
+        #title {
+            font-size: 14px;
+            color: #00ff41;
+            text-shadow: 
+                0 0 10px #00ff41,
+                0 0 20px #00ff41;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        #nowPlaying {
+            font-size: 8px;
+            color: #ff00ff;
+            text-shadow: 0 0 10px #ff00ff;
+            margin-top: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 10px;
+        }
+
+        /* Arena - Playlist Area */
+        #arena {
+            height: 387px;
+            background: #0f0f1e;
+            padding: 20px 15px;
+            overflow-y: auto;
+            padding-top: 50px;
+        }
+
+        #arena::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #arena::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+
+        #arena::-webkit-scrollbar-thumb {
+            background: #00ff41;
+            box-shadow: 0 0 10px #00ff41;
+        }
+
+        .track {
+            background: rgba(255, 0, 255, 0.1);
+            border: 2px solid #ff00ff;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+            padding: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .track:hover {
+            background: rgba(255, 0, 255, 0.2);
+            box-shadow: 
+                0 0 15px #ff00ff,
+                0 0 25px rgba(255, 0, 255, 0.5);
+            transform: translateX(5px);
+        }
+
+        .track.playing {
+            background: rgba(0, 255, 65, 0.2);
+            border-color: #00ff41;
+            box-shadow: 
+                0 0 15px #00ff41,
+                0 0 25px rgba(0, 255, 65, 0.5);
+        }
+
+        .trackInfo {
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .trackTitle {
+            font-size: 9px;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .trackDuration {
+            font-size: 7px;
+            color: #ff00ff;
+            text-shadow: 0 0 5px #ff00ff;
+        }
+
+        .playBtn {
+            background: transparent;
+            border: 2px solid #00ff41;
+            color: #00ff41;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            padding: 8px 12px;
+            cursor: pointer;
+            text-shadow: 0 0 10px #00ff41;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+            transition: all 0.2s;
+            min-width: 60px;
+        }
+
+        .playBtn:hover {
+            background: rgba(0, 255, 65, 0.2);
+            box-shadow: 
+                0 0 15px #00ff41,
+                0 0 25px rgba(0, 255, 65, 0.5);
+        }
+
+        .playBtn.playing {
+            color: #ff00ff;
+            border-color: #ff00ff;
+            text-shadow: 0 0 10px #ff00ff;
+        }
+
+        /* Control Panel */
+        #controlPanel {
+            height: 180px;
+            background: linear-gradient(0deg, #0f0f1e 0%, #1a1a2e 100%);
+            border-top: 3px solid #00ffff;
+            box-shadow: 0 0 15px #00ffff;
+            padding: 15px;
+        }
+
+        /* Visualizer */
+        #visualizer {
+            width: 100%;
+            height: 60px;
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #00ffff;
+            box-shadow: 
+                0 0 10px rgba(0, 255, 255, 0.3),
+                inset 0 0 10px rgba(0, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vizBar {
+            position: absolute;
+            bottom: 0;
+            width: 8px;
+            background: linear-gradient(to top, #ff00ff, #00ff41, #00ffff);
+            box-shadow: 0 0 10px currentColor;
+            transition: height 0.1s ease;
+        }
+
+        /* Progress Bar */
+        #progressContainer {
+            width: 100%;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #00ff41;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+            margin-bottom: 15px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        #progressBar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff00ff, #00ff41);
+            box-shadow: 0 0 15px #00ff41;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        #timeDisplay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 7px;
+            color: #00ffff;
+            text-shadow: 
+                0 0 5px #00ffff,
+                0 0 10px #00ffff,
+                1px 1px 0 #000,
+                -1px -1px 0 #000;
+            pointer-events: none;
+        }
+
+        /* Master Controls */
+        #masterControls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .controlBtn {
+            background: transparent;
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8px;
+            padding: 10px;
+            cursor: pointer;
+            text-shadow: 0 0 10px #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            transition: all 0.2s;
+            flex: 1;
+        }
+
+        .controlBtn:hover {
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 
+                0 0 15px #00ffff,
+                0 0 25px rgba(0, 255, 255, 0.5);
+        }
+
+        .controlBtn:active {
+            transform: scale(0.95);
+        }
+
+        #volumeControl {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        #volumeSlider {
+            flex: 1;
+            height: 8px;
+            -webkit-appearance: none;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #ff00ff;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+            outline: none;
+        }
+
+        #volumeSlider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #ff00ff;
+            box-shadow: 0 0 10px #ff00ff;
+            cursor: pointer;
+        }
+
+        #volumeSlider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #ff00ff;
+            box-shadow: 0 0 10px #ff00ff;
+            cursor: pointer;
+            border: none;
+        }
+
+        .volumeLabel {
+            font-size: 7px;
+            color: #ff00ff;
+            text-shadow: 0 0 10px #ff00ff;
+            min-width: 30px;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 375px) {
+            #gameContainer {
+                width: 100vw;
+                height: 100vh;
+                border: none;
+            }
+        }
+
+        @media (min-width: 376px) {
+            #gameContainer {
+                transform-origin: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <!-- HUD Area -->
+        <div id="hud">
+            <div id="title">🎄 NEON HOLIDAYS: THAT'S FUCKIN' MUSIC! 🎄</div>
+            <div id="nowPlaying">SELECT A TRACK TO BEGIN</div>
+        </div>
+
+        <!-- Arena - Playlist -->
+        <div id="arena">
+            <div id="playlist"></div>
+        </div>
+
+        <!-- Control Panel -->
+        <div id="controlPanel">
+            <div id="visualizer"></div>
+            
+            <div id="progressContainer">
+                <div id="progressBar"></div>
+                <div id="timeDisplay">0:00 / 0:00</div>
+            </div>
+
+            <div id="masterControls">
+                <button class="controlBtn" id="shuffleBtn">🔀 SHUFFLE</button>
+                <div id="volumeControl">
+                    <span class="volumeLabel">🔊</span>
+                    <input type="range" id="volumeSlider" min="0" max="100" value="70">
+                    <span class="volumeLabel" id="volumeValue">70%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // PLAYLIST DATA
+        const REPO_NAME = 'neonbreadmusic';
+        const tracks = [
+            {
+                title: 'Grandma Got Canceled by a Reindeer',
+                file: 'Grandma Got Canceled by a Reindeer (2025 Edition).mp3',
+                duration: 0
+            },
+            {
+                title: 'It\'s Real Enough',
+                file: 'It\'s Real Enough.mp3',
+                duration: 0
+            },
+            {
+                title: 'Oh, Santa Why (PS5)',
+                file: 'Oh, Santa Why (PS5).mp3',
+                duration: 0
+            },
+            {
+                title: 'Robux and Bells',
+                file: 'Robux and Bells.mp3',
+                duration: 0
+            },
+            {
+                title: 'Wrong List',
+                file: 'Wrong List.mp3',
+                duration: 0
+            }
+        ];
+
+        // Create Audio objects for each track
+        const audioObjects = {};
+        tracks.forEach((track, index) => {
+            const audio = new Audio();
+            audio.src = `https://raw.githubusercontent.com/LogicNerds/${REPO_NAME}/main/assets/audio/${track.file}`;
+            audio.volume = 0.7;
+            
+            // Get duration when metadata loads
+            audio.addEventListener('loadedmetadata', () => {
+                tracks[index].duration = audio.duration;
+                updateTrackDuration(index);
+            });
+
+            // Handle track ending
+            audio.addEventListener('ended', () => {
+                handleTrackEnd();
+            });
+
+            // Update progress
+            audio.addEventListener('timeupdate', () => {
+                if (currentTrack === index) {
+                    updateProgress();
+                }
+            });
+
+            audioObjects[index] = audio;
+        });
+
+        let currentTrack = null;
+        let isShuffleOn = false;
+
+        // Initialize playlist
+        function initPlaylist() {
+            const playlist = document.getElementById('playlist');
+            tracks.forEach((track, index) => {
+                const trackDiv = document.createElement('div');
+                trackDiv.className = 'track';
+                trackDiv.innerHTML = `
+                    <div class="trackInfo">
+                        <div class="trackTitle">${track.title}</div>
+                        <div class="trackDuration" id="duration-${index}">--:--</div>
+                    </div>
+                    <button class="playBtn" id="playBtn-${index}" onclick="toggleTrack(${index})">PLAY</button>
+                `;
+                playlist.appendChild(trackDiv);
+            });
+        }
+
+        function updateTrackDuration(index) {
+            const duration = tracks[index].duration;
+            const minutes = Math.floor(duration / 60);
+            const seconds = Math.floor(duration % 60).toString().padStart(2, '0');
+            document.getElementById(`duration-${index}`).textContent = `${minutes}:${seconds}`;
+        }
+
+        function toggleTrack(index) {
+            const audio = audioObjects[index];
+            const allTracks = document.querySelectorAll('.track');
+            const allBtns = document.querySelectorAll('.playBtn');
+
+            // If clicking current playing track
+            if (currentTrack === index && !audio.paused) {
+                audio.pause();
+                allBtns[index].textContent = 'PLAY';
+                allBtns[index].classList.remove('playing');
+                allTracks[index].classList.remove('playing');
+                stopVisualizer();
+                return;
+            }
+
+            // Stop current track if any
+            if (currentTrack !== null) {
+                audioObjects[currentTrack].pause();
+                audioObjects[currentTrack].currentTime = 0;
+                allBtns[currentTrack].textContent = 'PLAY';
+                allBtns[currentTrack].classList.remove('playing');
+                allTracks[currentTrack].classList.remove('playing');
+            }
+
+            // Play new track
+            currentTrack = index;
+            audio.currentTime = 0;
+            audio.play();
+            allBtns[index].textContent = 'PAUSE';
+            allBtns[index].classList.add('playing');
+            allTracks[index].classList.add('playing');
+            
+            document.getElementById('nowPlaying').textContent = `NOW PLAYING: ${tracks[index].title.toUpperCase()}`;
+            startVisualizer();
+        }
+
+        function handleTrackEnd() {
+            if (isShuffleOn) {
+                let nextTrack;
+                do {
+                    nextTrack = Math.floor(Math.random() * tracks.length);
+                } while (nextTrack === currentTrack && tracks.length > 1);
+                toggleTrack(nextTrack);
+            } else {
+                const nextTrack = (currentTrack + 1) % tracks.length;
+                toggleTrack(nextTrack);
+            }
+        }
+
+        // Progress bar
+        function updateProgress() {
+            if (currentTrack === null) return;
+            
+            const audio = audioObjects[currentTrack];
+            const percent = (audio.currentTime / audio.duration) * 100;
+            document.getElementById('progressBar').style.width = percent + '%';
+
+            const currentMin = Math.floor(audio.currentTime / 60);
+            const currentSec = Math.floor(audio.currentTime % 60).toString().padStart(2, '0');
+            const totalMin = Math.floor(audio.duration / 60);
+            const totalSec = Math.floor(audio.duration % 60).toString().padStart(2, '0');
+            
+            document.getElementById('timeDisplay').textContent = 
+                `${currentMin}:${currentSec} / ${totalMin}:${totalSec}`;
+        }
+
+        // Progress bar click
+        document.getElementById('progressContainer').addEventListener('click', (e) => {
+            if (currentTrack === null) return;
+            
+            const rect = e.currentTarget.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            const audio = audioObjects[currentTrack];
+            audio.currentTime = percent * audio.duration;
+        });
+
+        // Volume control
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeValue = document.getElementById('volumeValue');
+
+        volumeSlider.addEventListener('input', (e) => {
+            const volume = e.target.value / 100;
+            Object.values(audioObjects).forEach(audio => {
+                audio.volume = volume;
+            });
+            volumeValue.textContent = e.target.value + '%';
+        });
+
+        // Shuffle
+        document.getElementById('shuffleBtn').addEventListener('click', () => {
+            isShuffleOn = !isShuffleOn;
+            const btn = document.getElementById('shuffleBtn');
+            if (isShuffleOn) {
+                btn.style.background = 'rgba(0, 255, 255, 0.3)';
+                btn.style.boxShadow = '0 0 20px #00ffff';
+            } else {
+                btn.style.background = 'transparent';
+                btn.style.boxShadow = '0 0 10px rgba(0, 255, 255, 0.3)';
+            }
+        });
+
+        // Visualizer
+        const visualizer = document.getElementById('visualizer');
+        const numBars = 40;
+        let vizBars = [];
+        let vizInterval = null;
+
+        // Create visualizer bars
+        for (let i = 0; i < numBars; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'vizBar';
+            bar.style.left = (i * (100 / numBars)) + '%';
+            bar.style.height = '2px';
+            visualizer.appendChild(bar);
+            vizBars.push(bar);
+        }
+
+        function startVisualizer() {
+            if (vizInterval) return;
+            
+            vizInterval = setInterval(() => {
+                vizBars.forEach((bar, i) => {
+                    // Create wave-like pattern with randomness
+                    const baseHeight = Math.sin(Date.now() / 200 + i * 0.5) * 20 + 25;
+                    const randomness = Math.random() * 15;
+                    const height = Math.max(2, baseHeight + randomness);
+                    bar.style.height = height + 'px';
+                    
+                    // Color cycling
+                    const hue = (Date.now() / 20 + i * 9) % 360;
+                    bar.style.filter = `hue-rotate(${hue}deg)`;
+                });
+            }, 50);
+        }
+
+        function stopVisualizer() {
+            if (vizInterval) {
+                clearInterval(vizInterval);
+                vizInterval = null;
+                vizBars.forEach(bar => {
+                    bar.style.height = '2px';
+                });
+            }
+        }
+
+        // Responsive scaling
+        function scaleContainer() {
+            const container = document.getElementById('gameContainer');
+            const scale = Math.min(
+                window.innerWidth / 375,
+                window.innerHeight / 667
+            );
+            
+            if (window.innerWidth > 375) {
+                container.style.transform = `scale(${scale})`;
+            } else {
+                container.style.transform = 'none';
+            }
+        }
+
+        window.addEventListener('resize', scaleContainer);
+        scaleContainer();
+
+        // Initialize
+        initPlaylist();
+    </script>
+</body>
+</html>
