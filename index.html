@@ -362,7 +362,7 @@
         const tracks = [
             {
                 title: 'Grandma Got Canceled by a Reindeer',
-                file: 'Grandma Got Canceled by a Reindeer (2025 Edition).mp3',
+                file: 'Grandma%20Got%20Canceled%20by%20a%20Reindeer%20(2025%20Edition).mp3',
                 duration: 0
             },
             {
@@ -372,17 +372,17 @@
             },
             {
                 title: 'Oh, Santa Why (PS5)',
-                file: 'Oh, Santa Why (PS5).mp3',
+                file: 'Oh%2C%20Santa%20Why%20(PS5).mp3',
                 duration: 0
             },
             {
                 title: 'Robux and Bells',
-                file: 'Robux and Bells.mp3',
+                file: 'Robux%20and%20Bells.mp3',
                 duration: 0
             },
             {
                 title: 'Wrong List',
-                file: 'Wrong List.mp3',
+                file: 'Wrong%20List.mp3',
                 duration: 0
             }
         ];
@@ -394,10 +394,22 @@
             audio.src = `https://raw.githubusercontent.com/LogicNerds/${REPO_NAME}/main/assets/audio/${track.file}`;
             audio.volume = 0.7;
             
+            // Debug logging
+            console.log(`Loading track ${index}: ${track.title}`);
+            console.log(`URL: ${audio.src}`);
+            
             // Get duration when metadata loads
             audio.addEventListener('loadedmetadata', () => {
                 tracks[index].duration = audio.duration;
                 updateTrackDuration(index);
+                console.log(`✓ Loaded: ${track.title} - Duration: ${audio.duration}s`);
+            });
+
+            // Error handler
+            audio.addEventListener('error', (e) => {
+                console.error(`✗ FAILED to load: ${track.title}`);
+                console.error(`URL: ${audio.src}`);
+                console.error(`Error:`, audio.error);
             });
 
             // Handle track ending
